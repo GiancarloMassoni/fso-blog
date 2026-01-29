@@ -1,8 +1,9 @@
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 
-blogsRouter.get("/", (req, res) => {
-  Blog.find({}).then((blogs) => res.json(blogs));
+blogsRouter.get("/", async (req, res) => {
+  const blogs = await Blog.find({});
+  res.json(blogs);
 });
 
 blogsRouter.get("/:id", (req, res, next) => {
@@ -17,8 +18,16 @@ blogsRouter.get("/:id", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-blogsRouter.post("/", (req, res, next) => {
+blogsRouter.post("/", async (req, res) => {
   const body = req.body;
+
+  if (!body.title && !body.url) {
+    res.status(400).end();
+  }
+
+  if (!body.likes) {
+    body.likes = 0;
+  }
 
   const blog = new Blog({
     title: body.title,
@@ -27,41 +36,33 @@ blogsRouter.post("/", (req, res, next) => {
     likes: body.likes,
   });
 
-  blog
-    .save()
-    .then((savedBlog) => {
-      res.json(savedBlog);
-    })
-    .catch((err) => next(err));
+  const savedBlog = await blog.save();
+  res.status(201).json(savedBlog);
 });
 
-blogsRouter.delete("/:id", (req, res, next) => {
-  Blog.findByIdAndDelete(req.params.id)
-    .then(() => {
-      response.status(204).end();
-    })
-    .catch((err) => next(err));
+blogsRouter.delete("/:id", async (req, res) => {
+  await Blog.findByIdAndDelete(req.params.id);
+
+  res.status(204).end();
 });
 
-blogsRouter.put("/:id", (req, res, next) => {
+blogsRouter.put("/:id", async (req, res) => {
   const { title, author, url, likes } = req.body;
 
-  Blog.findById(req.params.id)
-    .then((blog) => {
-      if (!blog) {
-        return response.status(404).end();
-      }
+  const blog = await Blog.findById(req.params.id);
 
-      blog.title = title;
-      blog.author = author;
-      blog.url = url;
-      blog.likes = likes;
+  if (!blog) {
+    return res.status(404).end();
+  }
 
-      return blog.save().then((updateBlog) => {
-        res.json(updateBlog);
-      });
-    })
-    .catch((err) => next(err));
+  blog.title = title;
+  blog.author = author;
+  blog.url = url;
+  blog.likes = likes;
+
+  blog.save();
+
+  res.status(200).json(blog);
 });
 
 module.exports = blogsRouter;
