@@ -1,5 +1,6 @@
 const { test, after, beforeEach } = require("node:test");
 const assert = require("node:assert");
+const describe = require("node:test").describe;
 const mongoose = require("mongoose");
 const supertest = require("supertest");
 const app = require("../app");
@@ -105,6 +106,43 @@ test("updating of a blog", async () => {
   assert(ids.includes(blogToUpdate.id));
 
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+});
+
+describe("deletion of a blog", () => {
+  test("succeeds with status code 204 if id is valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    const ids = blogsAtEnd.map((n) => n.id);
+    assert(!ids.includes(blogToDelete.id));
+
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+  });
+});
+
+describe("updating of a blog", () => {
+  test("succeeds with status code 200 if id is valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToUpdate = blogsAtStart[0];
+    blogToUpdate.title = "Go To Statement Considered Harmful";
+    blogToUpdate.url =
+      "https://homepages.cwi.nl/~storm/teaching/reader/Dijkstra68.pdf";
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(blogToUpdate)
+      .expect(200);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    const ids = blogsAtEnd.map((n) => n.id);
+
+    assert(ids.includes(blogToUpdate.id));
+  });
 });
 
 after(async () => {
