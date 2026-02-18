@@ -1,21 +1,19 @@
 const Blog = require("../models/blog");
-
+const app = require("../app");
+const supertest = require("supertest");
+const api = supertest(app);
 const initialBlogs = [
   {
-    _id: "5a422a851b54a676234d17f7",
-    title: "React patterns",
-    author: "Michael Chan",
-    url: "https://reactpatterns.com/",
-    likes: 7,
-    __v: 0,
+    title: "testing number 101",
+    author: "gc",
+    url: "gc.com123123",
+    likes: 5,
   },
   {
-    _id: "5a422aa71b54a676234d17f8",
-    title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+    title: "testing number 101",
+    author: "gc",
+    url: "gc.com123123",
     likes: 5,
-    __v: 0,
   },
 ];
 
@@ -39,9 +37,18 @@ const usersInDb = async () => {
   return users.map((u) => u.toJSON());
 };
 
+const token = async () => {
+  const response = await api.post("/api/login").send({
+    username: "carlo123",
+    password: "12345",
+  });
+  return response.body.token;
+};
+
 module.exports = {
   initialBlogs,
   nonExistingId,
   blogsInDb,
   usersInDb,
+  token,
 };
